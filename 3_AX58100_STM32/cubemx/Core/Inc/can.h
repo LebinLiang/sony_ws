@@ -1,13 +1,13 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    gpio.h
+  * @file    can.h
   * @brief   This file contains all the function prototypes for
-  *          the gpio.c file
+  *          the can.c file
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2025 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __GPIO_H__
-#define __GPIO_H__
+#ifndef __CAN_H__
+#define __CAN_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,15 +32,13 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-/* USER CODE BEGIN Private defines */
-#define SET_485_HIGH2_UP() HAL_GPIO_WritePin(GPIOC,RS485_HIGH_RE2_Pin,GPIO_PIN_SET)
-#define SET_485_HIGH2_DOWN() HAL_GPIO_WritePin(GPIOC,RS485_HIGH_RE2_Pin,GPIO_PIN_RESET)
+extern CAN_HandleTypeDef hcan1;
 
-#define SET_485_HIGH1_UP() HAL_GPIO_WritePin(GPIOC,RS485_HIGH_RE1_Pin,GPIO_PIN_SET)
-#define SET_485_HIGH1_DOWN() HAL_GPIO_WritePin(GPIOC,RS485_HIGH_RE1_Pin,GPIO_PIN_RESET)
+/* USER CODE BEGIN Private defines */
+
 /* USER CODE END Private defines */
 
-void MX_GPIO_Init(void);
+void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -49,5 +47,6 @@ void MX_GPIO_Init(void);
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ GPIO_H__ */
+
+#endif /* __CAN_H__ */
 

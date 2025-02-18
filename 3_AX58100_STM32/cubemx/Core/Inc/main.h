@@ -62,8 +62,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define KEY_2_Pin GPIO_PIN_2
 #define KEY_2_GPIO_Port GPIOE
-#define KEY_1_Pin GPIO_PIN_3
-#define KEY_1_GPIO_Port GPIOE
+#define KEY_3_Pin GPIO_PIN_3
+#define KEY_3_GPIO_Port GPIOE
 #define KEY_0_Pin GPIO_PIN_4
 #define KEY_0_GPIO_Port GPIOE
 #define WK_UP_Pin GPIO_PIN_5
@@ -77,10 +77,12 @@ void Error_Handler(void);
 #define SYNC0_INT_Pin GPIO_PIN_3
 #define SYNC0_INT_GPIO_Port GPIOC
 #define SYNC0_INT_EXTI_IRQn EXTI3_IRQn
+#define RS485_LOW_TX_Pin GPIO_PIN_2
+#define RS485_LOW_TX_GPIO_Port GPIOA
+#define RS485_LOW_RX_Pin GPIO_PIN_3
+#define RS485_LOW_RX_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_1
 #define LED_GPIO_Port GPIOB
-#define OLED_CS_Pin GPIO_PIN_3
-#define OLED_CS_GPIO_Port GPIOG
 #define OLED_DC_Pin GPIO_PIN_4
 #define OLED_DC_GPIO_Port GPIOG
 #define OLED_RES_Pin GPIO_PIN_5
@@ -89,6 +91,20 @@ void Error_Handler(void);
 #define OLED_MOSI_GPIO_Port GPIOG
 #define OLED_CLK_Pin GPIO_PIN_7
 #define OLED_CLK_GPIO_Port GPIOG
+#define RS485_LOW_RE_Pin GPIO_PIN_8
+#define RS485_LOW_RE_GPIO_Port GPIOG
+#define RS485_HIGH_TX2_Pin GPIO_PIN_6
+#define RS485_HIGH_TX2_GPIO_Port GPIOC
+#define RS485_HIGH_RX2_Pin GPIO_PIN_7
+#define RS485_HIGH_RX2_GPIO_Port GPIOC
+#define RS485_HIGH_RE1_Pin GPIO_PIN_8
+#define RS485_HIGH_RE1_GPIO_Port GPIOC
+#define RS485_HIGH_RE2_Pin GPIO_PIN_9
+#define RS485_HIGH_RE2_GPIO_Port GPIOC
+#define RS485_HIGH_TX1_Pin GPIO_PIN_9
+#define RS485_HIGH_TX1_GPIO_Port GPIOA
+#define RS485_HIGH_RX1_Pin GPIO_PIN_10
+#define RS485_HIGH_RX1_GPIO_Port GPIOA
 #define BEEP_Pin GPIO_PIN_12
 #define BEEP_GPIO_Port GPIOC
 #define LED_1_Pin GPIO_PIN_2

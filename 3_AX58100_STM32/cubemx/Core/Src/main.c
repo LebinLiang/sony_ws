@@ -18,7 +18,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "can.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 #include "fsmc.h"
 
@@ -28,6 +30,10 @@
 #include "applInterface.h"
 #include "SSC-Device.h"
 #include "oled.h"
+
+#include "motor_control.h"
+#include "untree.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,6 +54,16 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+MOTOR_send cmd;  
+MOTOR_recv data;
+
+int8_t flag;
+
+MOTOR_send_A1 motor_a1_s ;
+MOTOR_recv_A1 motor_a1_r ;
+
+	
 
 /* USER CODE END PV */
 
@@ -87,12 +103,34 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+	cmd.id=1; 			  		//ç”µæœºæŒ‡ä»¤èµ‹å€¼
+	cmd.mode=0;
+	cmd.T=0.05;
+	cmd.W=0;
+	cmd.Pos=100;
+	cmd.K_P=0;
+	cmd.K_W=0;
+										
+	motor_a1_s.id=0; 			//A1ç”µæœºæŒ‡ä»¤èµ‹å€¼
+	motor_a1_s.mode=0;
+	motor_a1_s.T=0.05;
+	motor_a1_s.W=0;
+	motor_a1_s.Pos=100;
+	motor_a1_s.K_P=0;
+	motor_a1_s.K_W=0;
+	
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_FSMC_Init();
   MX_TIM3_Init();
+  MX_UART4_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
+  MX_USART6_UART_Init();
+  MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
 	HW_Init();
 	MainInit();
@@ -102,7 +140,8 @@ int main(void)
 	OLED_ShowString(0,16, "Servo Drive",12); 
 	OLED_ShowString(0,28,"AX58100+F407",12); 	
 	OLED_ShowString(0,40,"TIME 2025/2/17",12); 
-	OLED_Refresh_Gram();//¸üÐÂÏÔÊ¾µ½OLED
+	OLED_Refresh_Gram();//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½OLED
+	
 	
 	
 	
@@ -111,6 +150,8 @@ int main(void)
 	{
 		HAL_GPIO_TogglePin(GPIOG, LED_2_Pin);
 		HAL_Delay(500);
+		
+		flag=SERVO_Send_recv_A1(&motor_a1_s, &motor_a1_r);
 		
 		MainLoop();
 	} while (bRunApplication == TRUE);

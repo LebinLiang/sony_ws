@@ -30,6 +30,7 @@
 /*----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
 
+
 /* USER CODE END 1 */
 
 /** Configure pins as
@@ -49,27 +50,27 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, OLED_CS_Pin|OLED_DC_Pin|OLED_RES_Pin|OLED_MOSI_Pin
-                          |OLED_CLK_Pin|LED_2_Pin|LED_3_Pin|LED_4_Pin
-                          |LED_5_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_3|OLED_DC_Pin|OLED_RES_Pin|OLED_MOSI_Pin
+                          |OLED_CLK_Pin|RS485_LOW_RE_Pin|LED_2_Pin|LED_3_Pin
+                          |LED_4_Pin|LED_5_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE1_Pin|RS485_HIGH_RE2_Pin|BEEP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : KEY_2_Pin KEY_1_Pin KEY_0_Pin WK_UP_Pin */
-  GPIO_InitStruct.Pin = KEY_2_Pin|KEY_1_Pin|KEY_0_Pin|WK_UP_Pin;
+  /*Configure GPIO pins : KEY_2_Pin KEY_3_Pin KEY_0_Pin WK_UP_Pin */
+  GPIO_InitStruct.Pin = KEY_2_Pin|KEY_3_Pin|KEY_0_Pin|WK_UP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
@@ -87,14 +88,35 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OLED_CS_Pin OLED_DC_Pin OLED_RES_Pin OLED_MOSI_Pin
-                           OLED_CLK_Pin */
-  GPIO_InitStruct.Pin = OLED_CS_Pin|OLED_DC_Pin|OLED_RES_Pin|OLED_MOSI_Pin
-                          |OLED_CLK_Pin;
+  /*Configure GPIO pins : PG3 LED_2_Pin LED_3_Pin LED_4_Pin
+                           LED_5_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|LED_2_Pin|LED_3_Pin|LED_4_Pin
+                          |LED_5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : OLED_DC_Pin OLED_RES_Pin OLED_MOSI_Pin OLED_CLK_Pin */
+  GPIO_InitStruct.Pin = OLED_DC_Pin|OLED_RES_Pin|OLED_MOSI_Pin|OLED_CLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : RS485_LOW_RE_Pin */
+  GPIO_InitStruct.Pin = RS485_LOW_RE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(RS485_LOW_RE_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : RS485_HIGH_RE1_Pin RS485_HIGH_RE2_Pin */
+  GPIO_InitStruct.Pin = RS485_HIGH_RE1_Pin|RS485_HIGH_RE2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BEEP_Pin */
   GPIO_InitStruct.Pin = BEEP_Pin;
@@ -109,13 +131,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LED_2_Pin LED_3_Pin LED_4_Pin LED_5_Pin */
-  GPIO_InitStruct.Pin = LED_2_Pin|LED_3_Pin|LED_4_Pin|LED_5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);

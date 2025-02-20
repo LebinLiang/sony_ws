@@ -2,7 +2,8 @@
 #include "motor_control.h"
 #include "crc_ccitt.h"
 #include "stdio.h"
-#include "gpio.h"
+
+
 
 #define SATURATE(_IN, _MIN, _MAX) {\
  if (_IN < _MIN)\
@@ -88,36 +89,36 @@ int extract_data(MOTOR_recv *motor_r)
     }
 }
 
-HAL_StatusTypeDef SERVO_Send_recv(MOTOR_send *pData, MOTOR_recv *rData)
-{
-    uint16_t rxlen = 0;
-		memset(rData,0,sizeof(rData));
-    modify_data(pData);
-    SET_485_HIGH2_UP();
+//HAL_StatusTypeDef SERVO_Send_recv(MOTOR_send *pData, MOTOR_recv *rData)
+//{
+//    uint16_t rxlen = 0;
+//		memset(rData,0,sizeof(rData));
+//    modify_data(pData);
+//    //SET_485_HIGH2_UP();
 
-    HAL_UART_Transmit(&huart6, (uint8_t *)pData, sizeof(pData->motor_send_data), 10); 
-//	HAL_UART_Transmit(&huart1, (uint8_t *)pData, sizeof(pData->motor_send_data), 10); 	
-		
-		SET_485_HIGH2_DOWN();
+//    HAL_UART_Transmit(&huart6, (uint8_t *)pData, sizeof(pData->motor_send_data), 10); 
+////	HAL_UART_Transmit(&huart1, (uint8_t *)pData, sizeof(pData->motor_send_data), 10); 	
+//		
+//		//SET_485_HIGH2_DOWN();
 
-     HAL_UARTEx_ReceiveToIdle(&huart6, (uint8_t *)rData, sizeof(rData->motor_recv_data), &rxlen, 10);
-//		HAL_UART_Transmit(&huart1, (uint8_t *)rData, sizeof(rData->motor_recv_data), 10);
-		
+//     HAL_UARTEx_ReceiveToIdle(&huart6, (uint8_t *)rData, sizeof(rData->motor_recv_data), &rxlen, 10);
+////		HAL_UART_Transmit(&huart1, (uint8_t *)rData, sizeof(rData->motor_recv_data), 10);
+//		
 
-    if(rxlen == 0)
+//    if(rxlen == 0)
 
-      return HAL_TIMEOUT;
-    if(rxlen != sizeof(rData->motor_recv_data))
-			return HAL_ERROR;
+//      return HAL_TIMEOUT;
+//    if(rxlen != sizeof(rData->motor_recv_data))
+//			return HAL_ERROR;
 
-    uint8_t *rp = (uint8_t *)&rData->motor_recv_data;
-    if(rp[0] == 0xFD && rp[1] == 0xEE)
-    {
-        rData->correct = 1;
-        extract_data(rData);
-        return HAL_OK;
-    }
-		
-    
-    return HAL_ERROR;
-}
+//    uint8_t *rp = (uint8_t *)&rData->motor_recv_data;
+//    if(rp[0] == 0xFD && rp[1] == 0xEE)
+//    {
+//        rData->correct = 1;
+//        extract_data(rData);
+//        return HAL_OK;
+//    }
+//		
+//    
+//    return HAL_ERROR;
+//}

@@ -1,0 +1,236 @@
+/**
+ *******************************************************************************
+ * @file      : unitree.cpp
+ * @brief     :
+ * @history   :
+ *  Version     Date            Author          Note
+ *  V0.9.0     2024-01-22    Jerry Gong       1. <note>
+ *******************************************************************************
+ * @attention :
+ *******************************************************************************
+ *  Copyright (c) 2024 Reborn Team, USTB.
+ *  All Rights Reserved.
+ *******************************************************************************
+ */
+/* Includes ------------------------------------------------------------------*/
+#include "unitree.h"
+
+#include "crc.h"
+#include "string.h"
+#include "user_lib.h"
+/* Private macro -------------------------------------------------------------*/
+/* Private constants ---------------------------------------------------------*/
+/* Private types -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+/* External variables --------------------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
+
+/**
+ * @brief Initializes the Unitree Motor.
+ *
+ * This function is used to initialize the Unitree Motor with the specified UART
+ * handle, ID, and mode.
+ *
+ * @param _p_huart Pointer to the UART handle.
+ * @param _id The ID of the motor.
+ * @param _mode The mode of the motor.
+ */
+void Unitree_Motor::Init(UART_HandleTypeDef* _p_huart, uint8_t _id,
+                         uint8_t _mode, float _ang_bias ) {
+  p_huart_ = _p_huart;
+  id_ = _id;
+  mode_ = _mode;
+  ang_bias_ = _ang_bias;
+  if (p_huart_->Instance == USART1) {
+    p_port_ = GPIOC;
+    pin_ = RS485_HIGH_RE1_Pin;
+  } else if (p_huart_->Instance == USART6) {
+    p_port_ = GPIOC;
+    pin_ = RS485_HIGH_RE2_Pin;
+  }
+	
+
+}
+
+/**
+ * @brief Sets the motor data for the Unitree_Motor class.
+ *
+ * @param _Pos The position value.
+ * @param _T The torque value.
+ * @param _W The angular velocity value.
+ * @param _K_P The proportional gain value.
+ * @param _K_W The angular velocity gain value.
+ */
+void Unitree_Motor::SetMotorData(float _Pos, float _T, float _W, float _K_P,
+                                 float _K_W) {
+  motor_send_.id = id_;
+  motor_send_.mode = mode_;
+  motor_send_.Pos = _Pos;
+  motor_send_.T = _T;
+  motor_send_.W = _W;
+  motor_send_.K_P = _K_P;
+  motor_send_.K_W = _K_W;
+}
+
+/**
+ * @brief Sets the position of the motor.
+ *
+ * @param _Pos The desired position of the motor.
+ */
+void Unitree_Motor::SetMotorPos(float _Pos) {
+  SetMotorData(_Pos, 0, 0, 0.2f, 3.0f);
+}
+
+/**
+ * @brief Sets the motor torque.
+ *
+ * This function is used to set the torque of the motor.
+ *
+ * @param _T The torque value to be set.
+ */
+void Unitree_Motor::SetMotorT(float _T) {
+  SetMotorData(0, Math::AbsLimit(_T, 30.f) / 9.1f, 0, 0, 0.8f);
+}
+
+/**
+ * @brief Sends data from the Unitree_Motor class.
+ *
+ * This function is responsible for sending data from the Unitree_Motor class.
+ * It performs the necessary operations to send the data.
+ *
+ * @return void
+ */
+int Unitree_Motor::SendData() {
+  motor_send_.ComData.head.start[0] = 0xFE;
+  motor_send_.ComData.head.start[1] = 0xEE;
+  motor_send_.ComData.head.motorID = motor_send_.id;
+  motor_send_.ComData.Mdata.mode = motor_send_.mode;
+  motor_send_.ComData.Mdata.ModifyBit = 0xFF;
+  motor_send_.ComData.Mdata.Pos = (motor_send_.Pos / 6.2832f) * 16384;
+  motor_send_.ComData.Mdata.T = motor_send_.T * 256;
+  motor_send_.ComData.Mdata.W = motor_send_.W * 128;
+  motor_send_.ComData.Mdata.K_P = motor_send_.K_P * 2048;
+  motor_send_.ComData.Mdata.K_W = motor_send_.K_W * 1024;
+  motor_send_.ComData.CRC32 =
+      HAL_CRC_Calculate(&hcrc, (uint32_t*)&motor_send_.ComData, 7);
+
+  return 0;
+}
+
+/**
+ * @brief Updates the Unitree Motor.
+ *
+ * This function is responsible for updating the Unitree Motor based on the
+ * provided data.
+ *
+ * @param pData Pointer to the data used for updating the motor.
+ * @return None.
+ */
+int Unitree_Motor::Update(uint8_t* pData) {
+  if (motor_recv_.ServoData.CRCdata ==
+      HAL_CRC_Calculate(&hcrc, (uint32_t*)(pData), 18)) {
+				
+    motor_recv_.resv_time = HAL_GetTick();
+		DetectHook(motor_recv_.resv_time);
+				
+		motor_recv_.motor_id = motor_recv_.ServoData.head.motorID;
+    motor_recv_.mode = motor_recv_.ServoData.Mdata.mode;
+    motor_recv_.Temp = motor_recv_.ServoData.Mdata.Temp;
+    motor_recv_.MError = motor_recv_.ServoData.Mdata.MError;
+    motor_recv_.W = ((float)motor_recv_.ServoData.Mdata.W / 128) * 0.95f +
+                    motor_recv_.W * 0.05f;
+    motor_recv_.T = (float)motor_recv_.ServoData.Mdata.T / 256;
+    motor_recv_.Pos =
+        6.2832f * ((float)motor_recv_.ServoData.Mdata.Pos) / 16384;
+  }
+  return 0;
+}
+
+/**
+ * @brief Controls the Unitree motor.
+ *
+ * This function is responsible for controlling the Unitree motor.
+ * It returns the status of the operation.
+ *
+ * @return HAL_StatusTypeDef The status of the operation.
+ */
+void Unitree_Motor::Ctrl() {
+  SendData();
+  HAL_GPIO_WritePin(p_port_, pin_, GPIO_PIN_SET);
+  HAL_UART_Transmit_DMA(p_huart_, (uint8_t*)&motor_send_.ComData,
+                        sizeof(motor_send_.ComData));
+  HAL_UART_Receive_DMA(p_huart_, (uint8_t*)&motor_recv_.ServoData,
+                       sizeof(motor_recv_.ServoData));
+	//__HAL_DMA_DISABLE_IT(p_huart_->hdmarx, DMA_IT_HT);
+
+  uint8_t* rp = (uint8_t*)&motor_recv_.ServoData;
+  if (rp[0] == 0xFE && rp[1] == 0xEE) {
+//		if( motor_recv_.motor_id == id_)
+//		{
+			Update((uint8_t*)&motor_recv_.ServoData);
+			error_p_->data_is_error = 0;
+			memset((uint8_t*)&motor_recv_.ServoData, 0,  sizeof(motor_recv_.ServoData));
+//		}
+	}
+	else
+		error_p_->data_is_error = 1;
+}
+
+float Unitree_Motor::GetAngle() {
+  return (motor_recv_.Pos - ang_bias_) / 9.1f;
+}
+
+float Unitree_Motor::GetSpeed() {
+  return motor_recv_.W / 9.1f;
+}
+
+float Unitree_Motor::GetTor() {
+  return motor_recv_.T * 9.1f;
+}
+
+uint32_t Unitree_Motor::GetResvTime(){
+	return motor_recv_.resv_time;
+}
+
+void Unitree_Motor::Error_init(error_t* _error_p){
+	
+		error_p_ = _error_p;
+}
+
+void Unitree_Motor::DetectHook(uint32_t resv_time){
+	
+	error_p_->last_time = error_p_ ->new_time;
+	error_p_->new_time = resv_time ; 
+	
+	if (error_p_->is_lost)
+    {
+        error_p_->is_lost = 0;
+        error_p_->work_time = error_p_->new_time;
+    }
+	
+}
+
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+  // same as the operation in Sendcommand(), we need to change the huart to
+  // receive mode
+  if (huart == &huart1) {
+    HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE1_Pin, GPIO_PIN_RESET);
+  }
+  if (huart == &huart6) {
+    HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE2_Pin, GPIO_PIN_RESET);
+  }
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+    
+		if (huart == &huart1) {
+    HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE1_Pin, GPIO_PIN_SET);
+  }
+		if (huart == &huart6) {
+    HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE2_Pin, GPIO_PIN_SET);
+  }
+}
+

@@ -97,25 +97,20 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OLED_DC_Pin OLED_RES_Pin OLED_MOSI_Pin OLED_CLK_Pin */
-  GPIO_InitStruct.Pin = OLED_DC_Pin|OLED_RES_Pin|OLED_MOSI_Pin|OLED_CLK_Pin;
+  /*Configure GPIO pins : OLED_DC_Pin OLED_RES_Pin OLED_MOSI_Pin OLED_CLK_Pin
+                           RS485_LOW_RE_Pin */
+  GPIO_InitStruct.Pin = OLED_DC_Pin|OLED_RES_Pin|OLED_MOSI_Pin|OLED_CLK_Pin
+                          |RS485_LOW_RE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : RS485_LOW_RE_Pin */
-  GPIO_InitStruct.Pin = RS485_LOW_RE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(RS485_LOW_RE_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pins : RS485_HIGH_RE1_Pin RS485_HIGH_RE2_Pin */
   GPIO_InitStruct.Pin = RS485_HIGH_RE1_Pin|RS485_HIGH_RE2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BEEP_Pin */

@@ -19,6 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "crc.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -30,15 +32,29 @@
 #include "applInterface.h"
 #include "SSC-Device.h"
 #include "oled.h"
+#include "stdio.h"
+#include "cpp_app.h"
 
-#include "motor_control.h"
-#include "untree.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+/* 告知连接器不从C库链接使用半主机的函数 */
 
+//#pragma import(__use_no_semihosting)
+ 
+/* 定义 _sys_exit() 以避免使用半主机模式 */
+ 
+void _sys_exit(int x)
+ 
+{
+ 
+    x = x;
+ 
+}
+
+ 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -55,15 +71,9 @@
 
 /* USER CODE BEGIN PV */
 
-MOTOR_send cmd;  
-MOTOR_recv data;
-
 int8_t flag;
 
-MOTOR_send_A1 motor_a1_s ;
-MOTOR_recv_A1 motor_a1_r ;
-
-	
+extern float hz_detect ;
 
 /* USER CODE END PV */
 
@@ -75,6 +85,51 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void OLED_ShowStatus()
+{
+    // 显示标题
+    OLED_ShowString(0, 0, "SONY-EtherCAT", 16);  // 第一行显示标题
+
+    // 显示设备状态
+    for (int i = 0; i < ERROR_LIST_LENGHT; i++) 
+    {
+        uint8_t status_char = '1';  // 默认正常状态，显示'1'（正常）
+
+        if (error_list[i].error_exist)
+        {
+            if (error_list[i].is_lost)
+            {
+                status_char = '0';  // 错误且丢失，显示'0'（丢失）
+            }
+            else
+            {
+                status_char = '0';  // 仅错误，显示'2'（错误）
+            }
+        }
+        else if (error_list[i].is_lost)
+        {
+            status_char = '0';  // 仅丢失，显示'0'（丢失）
+        }
+
+        // 计算显示位置
+        int row = 16 + (i / 3) * 16;  // 每行显示三个设备
+        int col = (i % 3) * 36;  // 每个设备占24个像素位置
+
+        // 显示 M1, M2, M3, ... 和状态
+        OLED_ShowChar(col, row, 'M', 12, 1);  // 显示'M'
+        OLED_ShowChar(col + 8, row, '1' + i, 12, 1);  // 显示M1, M2, M3, ...
+        OLED_ShowChar(col + 16, row, ':', 12, 1);  // 显示冒号
+        OLED_ShowChar(col + 24, row, status_char, 12, 1);  // 显示状态 '0', '1' 或 '2'
+    }
+		
+		// 显示控制频率
+    char freq_str[16];
+    snprintf(freq_str, sizeof(freq_str), "Freq: %.2f Hz", hz_detect);  // 格式化频率字符串
+    OLED_ShowString(0, 45, freq_str, 12);  // 在最后一行显示控制频率
+
+    // 刷新OLED显示
+    OLED_Refresh_Gram();
+}
 
 /* USER CODE END 0 */
 
@@ -87,6 +142,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+  
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,27 +158,13 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
-	cmd.id=1; 			  		//电机指令赋值
-	cmd.mode=0;
-	cmd.T=0.05;
-	cmd.W=0;
-	cmd.Pos=100;
-	cmd.K_P=0;
-	cmd.K_W=0;
-										
-	motor_a1_s.id=0; 			//A1电机指令赋值
-	motor_a1_s.mode=0;
-	motor_a1_s.T=0.05;
-	motor_a1_s.W=0;
-	motor_a1_s.Pos=100;
-	motor_a1_s.K_P=0;
-	motor_a1_s.K_W=0;
+	
 	
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_FSMC_Init();
   MX_TIM3_Init();
   MX_UART4_Init();
@@ -131,27 +173,38 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_CAN1_Init();
+  MX_TIM2_Init();
+  MX_CRC_Init();
+  MX_TIM4_Init();
+  MX_TIM5_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 	HW_Init();
 	MainInit();
+	cpp_main_init();
+	
+	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_Base_Start_IT(&htim4);
+	HAL_TIM_Base_Start_IT(&htim5);
+	
 	OLED_Init();		
-	
-	OLED_ShowString(0,0,"EtherCAT SERVER ",16);  
-	OLED_ShowString(0,16, "Servo Drive",12); 
-	OLED_ShowString(0,28,"AX58100+F407",12); 	
-	OLED_ShowString(0,40,"TIME 2025/2/17",12); 
-	OLED_Refresh_Gram();//������ʾ��OLED
-	
-	
+	//OLED_ShowString(0,0,"SONY-EtherCAT ",16);  
+	//OLED_ShowString(0,16, "Servo Drive",12); 
+	//OLED_ShowString(0,28,"AX58100+F407",12); 	
+	//OLED_ShowString(0,45,"TIME 2025/2/17",12); 
+	//OLED_Refresh_Gram();//������ʾ��OLED
 	
 	
 	bRunApplication = TRUE;
 	do
 	{
-		HAL_GPIO_TogglePin(GPIOG, LED_2_Pin);
-		HAL_Delay(500);
+
+		OLED_ShowStatus();
 		
-		flag=SERVO_Send_recv_A1(&motor_a1_s, &motor_a1_r);
+		//HAL_GPIO_TogglePin(GPIOG, LED_2_Pin);
+		//HAL_Delay(500);
+		
+		//cpp_main();
 		
 		MainLoop();
 	} while (bRunApplication == TRUE);
@@ -265,6 +318,9 @@ void SystemClock_Config(void)
 //				}
 //		}
 //		HAL_Delay(2000);
+
+
+
 
 
 /* USER CODE END 4 */

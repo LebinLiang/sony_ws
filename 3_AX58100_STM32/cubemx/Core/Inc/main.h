@@ -39,7 +39,10 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+void cpp_main(void);
+void cpp_main_init(void);
+void cpp_main2(void);
+	void detect_check(void);
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -50,12 +53,14 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
+ 
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+
 
 /* USER CODE END EFP */
 

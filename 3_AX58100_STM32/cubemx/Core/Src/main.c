@@ -173,11 +173,10 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_CAN1_Init();
-  MX_TIM2_Init();
   MX_CRC_Init();
+  MX_TIM2_Init();
   MX_TIM4_Init();
   MX_TIM5_Init();
-  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 	HW_Init();
 	MainInit();
@@ -193,19 +192,14 @@ int main(void)
 	//OLED_ShowString(0,28,"AX58100+F407",12); 	
 	//OLED_ShowString(0,45,"TIME 2025/2/17",12); 
 	//OLED_Refresh_Gram();//������ʾ��OLED
-	
-	
-	bRunApplication = TRUE;
+		bRunApplication = TRUE;
 	do
 	{
 
 		OLED_ShowStatus();
+		//HAL_Delay(100);
 		
-		//HAL_GPIO_TogglePin(GPIOG, LED_2_Pin);
-		//HAL_Delay(500);
-		
-		//cpp_main();
-		
+		HAL_GPIO_TogglePin(GPIOG, LED_2_Pin);
 		MainLoop();
 	} while (bRunApplication == TRUE);
 	HW_Release();

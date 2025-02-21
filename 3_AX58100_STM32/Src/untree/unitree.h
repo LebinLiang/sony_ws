@@ -229,7 +229,7 @@ class Unitree_Motor {
   void SetMotorData(float _Pos, float _T, float _W, float _K_P, float _K_W);
   void SetMotorPos(float _Pos);
   void SetMotorT(float _T);
-  int Update(uint8_t* pData);
+  int Update(uint8_t* pData,uint32_t CRC_data);
   float GetAngle();
   float GetSpeed();
 	uint32_t GetResvTime();
@@ -238,17 +238,22 @@ class Unitree_Motor {
   void Receive();
   void Error_init(error_t* _error_p);
   void DetectHook(uint32_t resv_time);
-
+	void error_data_update(uint8_t data_error );
+  uint8_t GetID();
+ 
+ 
  private:
   UART_HandleTypeDef* p_huart_;
   uint8_t id_, mode_;
   GPIO_TypeDef* p_port_;
   uint16_t pin_;
   MOTOR_send motor_send_;
-  MOTOR_recv motor_recv_;
+	error_t* error_p_;
+	MOTOR_recv motor_recv_;
+  
   float ang_bias_;
  
-	error_t* error_p_;
+	
 };
 
 /* Exported variables --------------------------------------------------------*/

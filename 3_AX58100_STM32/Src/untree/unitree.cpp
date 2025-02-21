@@ -25,6 +25,10 @@
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 
+
+
+extern Unitree_Motor a1_joint1_ , a1_joint2_ , a1_joint3_ , a1_joint4_ ,a1_joint5_, a1_joint6_; 
+MOTOR_recv motor_recv_raw;
 /**
  * @brief Initializes the Unitree Motor.
  *
@@ -126,13 +130,13 @@ int Unitree_Motor::SendData() {
  * @param pData Pointer to the data used for updating the motor.
  * @return None.
  */
-int Unitree_Motor::Update(uint8_t* pData) {
-  if (motor_recv_.ServoData.CRCdata ==
-      HAL_CRC_Calculate(&hcrc, (uint32_t*)(pData), 18)) {
-				
+int Unitree_Motor::Update(uint8_t* pData,uint32_t CRC_data) {
+  if (CRC_data == HAL_CRC_Calculate(&hcrc, (uint32_t*)(pData), 18)) {
+		
+		memcpy((uint8_t*)&motor_recv_.ServoData,pData,sizeof(motor_recv_.ServoData));
     motor_recv_.resv_time = HAL_GetTick();
 		DetectHook(motor_recv_.resv_time);
-				
+		
 		motor_recv_.motor_id = motor_recv_.ServoData.head.motorID;
     motor_recv_.mode = motor_recv_.ServoData.Mdata.mode;
     motor_recv_.Temp = motor_recv_.ServoData.Mdata.Temp;
@@ -157,23 +161,25 @@ int Unitree_Motor::Update(uint8_t* pData) {
 void Unitree_Motor::Ctrl() {
   SendData();
   HAL_GPIO_WritePin(p_port_, pin_, GPIO_PIN_SET);
+	
   HAL_UART_Transmit_DMA(p_huart_, (uint8_t*)&motor_send_.ComData,
                         sizeof(motor_send_.ComData));
+	
   HAL_UART_Receive_DMA(p_huart_, (uint8_t*)&motor_recv_.ServoData,
-                       sizeof(motor_recv_.ServoData));
-	//__HAL_DMA_DISABLE_IT(p_huart_->hdmarx, DMA_IT_HT);
+                      sizeof(motor_recv_.ServoData));
 
-  uint8_t* rp = (uint8_t*)&motor_recv_.ServoData;
-  if (rp[0] == 0xFE && rp[1] == 0xEE) {
-//		if( motor_recv_.motor_id == id_)
+//  uint8_t* rp = (uint8_t*)&motor_recv_.ServoData;
+//  if (rp[0] == 0xFE && rp[1] == 0xEE) {
+//		if(motor_recv_.ServoData.head.motorID == id_)
 //		{
-			Update((uint8_t*)&motor_recv_.ServoData);
-			error_p_->data_is_error = 0;
-			memset((uint8_t*)&motor_recv_.ServoData, 0,  sizeof(motor_recv_.ServoData));
+//			Update((uint8_t*)&motor_recv_.ServoData);
+//			error_p_->data_is_error = 0;
+//			memset((uint8_t*)&motor_recv_.ServoData, 0,  sizeof(motor_recv_.ServoData));
 //		}
-	}
-	else
-		error_p_->data_is_error = 1;
+//	memset((uint8_t*)&motor_recv_.ServoData, 0,  sizeof(motor_recv_.ServoData));
+//	}
+//	else
+//		error_p_->data_is_error = 1;
 }
 
 float Unitree_Motor::GetAngle() {
@@ -207,9 +213,19 @@ void Unitree_Motor::DetectHook(uint32_t resv_time){
         error_p_->is_lost = 0;
         error_p_->work_time = error_p_->new_time;
     }
-	
 }
 
+uint8_t Unitree_Motor::GetID(){
+	
+	return motor_recv_.ServoData.head.motorID;
+}
+
+void Unitree_Motor::error_data_update(uint8_t data_error)
+{
+		error_p_->data_is_error = data_error;
+}
+
+ 
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   // same as the operation in Sendcommand(), we need to change the huart to
@@ -223,14 +239,57 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
 }
 
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    
 		if (huart == &huart1) {
-    HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE1_Pin, GPIO_PIN_SET);
-  }
+			HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE1_Pin, GPIO_PIN_SET);
+			
+			HAL_UART_Receive_DMA(&huart1, (uint8_t*)&motor_recv_raw.ServoData, sizeof(motor_recv_raw.ServoData));
+			uint8_t* rp = (uint8_t*)&motor_recv_raw.ServoData;
+			if (rp[0] == 0xFE && rp[1] == 0xEE) {
+				switch (motor_recv_raw.ServoData.head.motorID)
+				{
+					case 0:
+						a1_joint1_.Update((uint8_t*)&motor_recv_raw.ServoData,motor_recv_raw.ServoData.CRCdata);
+						a1_joint1_.error_data_update(0);//data_is_error = 0;
+					break;
+					case 1:
+						a1_joint2_.Update((uint8_t*)&motor_recv_raw.ServoData,motor_recv_raw.ServoData.CRCdata);
+						a1_joint2_.error_data_update(0);//data_is_error = 0;
+					
+					break;
+					case 2:
+						a1_joint3_.Update((uint8_t*)&motor_recv_raw.ServoData,motor_recv_raw.ServoData.CRCdata);
+						a1_joint3_.error_data_update(0);//data_is_error = 0;
+					break;
+				}
+				memset((uint8_t*)&motor_recv_raw.ServoData, 0,  sizeof(motor_recv_raw.ServoData));
+			}
+			}
 		if (huart == &huart6) {
-    HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE2_Pin, GPIO_PIN_SET);
+			
+			HAL_UART_Receive_DMA(&huart6, (uint8_t*)&motor_recv_raw.ServoData, sizeof(motor_recv_raw.ServoData));
+			uint8_t* rp = (uint8_t*)&motor_recv_raw.ServoData;
+			if (rp[0] == 0xFE && rp[1] == 0xEE) {
+				switch (motor_recv_raw.ServoData.head.motorID)
+				{
+						case 0:
+						a1_joint4_.Update((uint8_t*)&motor_recv_raw.ServoData,motor_recv_raw.ServoData.CRCdata);
+						a1_joint4_.error_data_update(0);//data_is_error = 0;
+					break;
+					case 1:
+						a1_joint5_.Update((uint8_t*)&motor_recv_raw.ServoData,motor_recv_raw.ServoData.CRCdata);
+						a1_joint5_.error_data_update(0);//data_is_error = 0;
+					
+					break;
+					case 2:
+						a1_joint6_.Update((uint8_t*)&motor_recv_raw.ServoData,motor_recv_raw.ServoData.CRCdata);
+						a1_joint6_.error_data_update(0);//data_is_error = 0;
+					break;
+				}
+				memset((uint8_t*)&motor_recv_raw.ServoData, 0,  sizeof(motor_recv_raw.ServoData));
+			}
   }
 }
 

@@ -28,6 +28,7 @@
 
 
 extern Unitree_Motor a1_joint1_ , a1_joint2_ , a1_joint3_ , a1_joint4_ ,a1_joint5_, a1_joint6_; 
+MOTOR_recv motor_recv_raw;
 
 /**
  * @brief Initializes the Unitree Motor.
@@ -233,7 +234,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 		if (huart == &huart1) {
 			HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE1_Pin, GPIO_PIN_SET);
-			MOTOR_recv motor_recv_raw;
+			
 			HAL_UART_Receive_DMA(&huart1, (uint8_t*)&motor_recv_raw.ServoData, sizeof(motor_recv_raw.ServoData));
 			uint8_t* rp = (uint8_t*)&motor_recv_raw.ServoData;
 			if (rp[0] == 0xFE && rp[1] == 0xEE) {
@@ -243,7 +244,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						a1_joint1_.motor_recv_.ServoData.CRCdata = motor_recv_raw.ServoData.CRCdata;
 						a1_joint1_.Update((uint8_t*)&motor_recv_raw.ServoData);
 						a1_joint1_.error_p_->data_is_error = 0;//data_is_error = 0;
-						memset((uint8_t*)&motor_recv_raw.ServoData, 0,  sizeof(motor_recv_raw.ServoData));
 					break;
 					case 1:
 						a1_joint2_.motor_recv_.ServoData.CRCdata = motor_recv_raw.ServoData.CRCdata;
@@ -255,12 +255,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						a1_joint3_.Update((uint8_t*)&motor_recv_raw.ServoData);
 						a1_joint3_.error_p_->data_is_error = 0;//data_is_error = 0;
 					break;
+					memset((uint8_t*)&motor_recv_raw.ServoData, 0,  sizeof(motor_recv_raw.ServoData));
 				}
 			}
 			}
 		if (huart == &huart6) {
 			HAL_GPIO_WritePin(GPIOC, RS485_HIGH_RE2_Pin, GPIO_PIN_SET);
-			MOTOR_recv motor_recv_raw;
+			
 			HAL_UART_Receive_DMA(&huart6, (uint8_t*)&motor_recv_raw.ServoData, sizeof(motor_recv_raw.ServoData));
 			uint8_t* rp = (uint8_t*)&motor_recv_raw.ServoData;
 			if (rp[0] == 0xFE && rp[1] == 0xEE) {
@@ -270,7 +271,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						a1_joint4_.motor_recv_.ServoData.CRCdata = motor_recv_raw.ServoData.CRCdata;
 						a1_joint4_.Update((uint8_t*)&motor_recv_raw.ServoData);
 						a1_joint4_.error_p_->data_is_error = 0;//data_is_error = 0;
-						memset((uint8_t*)&motor_recv_raw.ServoData, 0,  sizeof(motor_recv_raw.ServoData));
 					break;
 					case 1:
 						a1_joint5_.motor_recv_.ServoData.CRCdata = motor_recv_raw.ServoData.CRCdata;
@@ -283,6 +283,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						a1_joint6_.error_p_->data_is_error = 0;//data_is_error = 0;
 					break;
 				}
+				memset((uint8_t*)&motor_recv_raw.ServoData, 0,  sizeof(motor_recv_raw.ServoData));
 			}
   }
 }

@@ -238,17 +238,20 @@ class Unitree_Motor {
   void Receive();
   void Error_init(error_t* _error_p);
   void DetectHook(uint32_t resv_time);
-
+	error_t* error_p_;
+	MOTOR_recv motor_recv_;
+ 
+ 
  private:
   UART_HandleTypeDef* p_huart_;
   uint8_t id_, mode_;
   GPIO_TypeDef* p_port_;
   uint16_t pin_;
   MOTOR_send motor_send_;
-  MOTOR_recv motor_recv_;
+  
   float ang_bias_;
  
-	error_t* error_p_;
+	
 };
 
 /* Exported variables --------------------------------------------------------*/

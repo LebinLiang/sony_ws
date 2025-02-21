@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "can.h"
 #include "crc.h"
 #include "dma.h"
@@ -79,6 +80,7 @@ extern float hz_detect ;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -173,19 +175,15 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_CAN1_Init();
-  MX_TIM2_Init();
   MX_CRC_Init();
-  MX_TIM4_Init();
-  MX_TIM5_Init();
-  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 	HW_Init();
 	MainInit();
 	cpp_main_init();
 	
-	HAL_TIM_Base_Start_IT(&htim2);
-	HAL_TIM_Base_Start_IT(&htim4);
-	HAL_TIM_Base_Start_IT(&htim5);
+	//HAL_TIM_Base_Start_IT(&htim2);
+	//HAL_TIM_Base_Start_IT(&htim4);
+	//HAL_TIM_Base_Start_IT(&htim5);
 	
 	OLED_Init();		
 	//OLED_ShowString(0,0,"SONY-EtherCAT ",16);  
@@ -193,23 +191,16 @@ int main(void)
 	//OLED_ShowString(0,28,"AX58100+F407",12); 	
 	//OLED_ShowString(0,45,"TIME 2025/2/17",12); 
 	//OLED_Refresh_Gram();//������ʾ��OLED
-	
-	
-	bRunApplication = TRUE;
-	do
-	{
-
-		OLED_ShowStatus();
 		
-		//HAL_GPIO_TogglePin(GPIOG, LED_2_Pin);
-		//HAL_Delay(500);
-		
-		//cpp_main();
-		
-		MainLoop();
-	} while (bRunApplication == TRUE);
-	HW_Release();
   /* USER CODE END 2 */
+
+  /* Call init function for freertos objects (in cmsis_os2.c) */
+  MX_FREERTOS_Init();
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */

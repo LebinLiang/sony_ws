@@ -96,7 +96,7 @@ void detect_check(void)
 
 void cpp_main_init(void)
 {
-	
+	//DWT_Init(168);
 	a1_joint1_.Init(&huart1, 0, 0, 0);
 	a1_joint1_.Error_init(&error_list[A1_MOTOR1_TOE]);
 	
@@ -140,7 +140,7 @@ void cpp_main_init(void)
 
 void cpp_main2(void)
 {
-
+	
 }
 
 void cpp_main(void)

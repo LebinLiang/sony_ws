@@ -849,12 +849,12 @@ interwork --depend=cubemx\startup_stm32f407xx.d -ocubemx\startup_stm32f407xx.o
 ARM Macro Assembler    Page 14 
 
 
--I.\RTE\_cubemx -ID:\Users\LiangLebin\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\C
-MSIS\Core\Include -ID:\Users\LiangLebin\AppData\Local\Arm\Packs\Keil\STM32F4xx_
-DFP\2.13.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine="__UVISION_VER
-SION SETA 530" --predefine="_RTE_ SETA 1" --predefine="STM32F407xx SETA 1" --pr
-edefine="_RTE_ SETA 1" --list=.\cubemx\startup_stm32f407xx.lst startup_stm32f40
-7xx.s
+-I../Core/Inc -I.\RTE\_cubemx -ID:\Users\LiangLebin\AppData\Local\Arm\Packs\ARM
+\CMSIS\5.7.0\CMSIS\Core\Include -ID:\Users\LiangLebin\AppData\Local\Arm\Packs\K
+eil\STM32F4xx_DFP\2.13.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine=
+"__UVISION_VERSION SETA 530" --predefine="_RTE_ SETA 1" --predefine="STM32F407x
+x SETA 1" --predefine="_RTE_ SETA 1" --list=.\cubemx\startup_stm32f407xx.lst st
+artup_stm32f407xx.s
 
 
 

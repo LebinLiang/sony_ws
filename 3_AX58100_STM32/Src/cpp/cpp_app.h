@@ -3,6 +3,7 @@
 
 #include "unitree.h"
 #include "main.h"
+#include "unitree_m8010.h"
 
 // ¶¨Òå CheckList Ã¶¾Ù
 enum CheckList

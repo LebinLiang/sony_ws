@@ -6,6 +6,7 @@
 float hz_detect = 0 ;
 int detect_count = 0;
 int motor_choose = 0;
+int can_choose = 0 ;
 float a1_joint1_angle ,a1_joint2_angle ; 
 
 uint16_t set_item[ERROR_LIST_LENGHT][3] =
@@ -23,6 +24,7 @@ error_t error_list[ERROR_LIST_LENGHT + 1];
 
 Unitree_Motor a1_joint1_ , a1_joint2_ , a1_joint3_ , a1_joint4_ ,a1_joint5_, a1_joint6_; 
 
+Unitree_M8010 m8_joint1_ ,m8_joint2_ , m8_joint3_ , m8_joint4_;
 
 				
 				
@@ -96,7 +98,7 @@ void detect_check(void)
 
 void cpp_main_init(void)
 {
-	//DWT_Init(168);
+	
 	a1_joint1_.Init(&huart1, 0, 0, 0);
 	a1_joint1_.Error_init(&error_list[A1_MOTOR1_TOE]);
 	
@@ -115,6 +117,15 @@ void cpp_main_init(void)
 	a1_joint6_.Init(&huart6, 2, 0, 0);
 	a1_joint6_.Error_init(&error_list[A1_MOTOR6_TOE]);
 	
+	
+	m8_joint1_.Init_CAN(&hcan1,0x03,0,1,0);
+	m8_joint1_.CAN_Set();
+	m8_joint2_.Init_CAN(&hcan1,0x03,1,1,0);
+	m8_joint2_.CAN_Set();
+	m8_joint3_.Init_CAN(&hcan1,0x03,2,1,0);
+	m8_joint3_.CAN_Set();
+	m8_joint4_.Init_CAN(&hcan1,0x03,3,1,0);
+	m8_joint4_.CAN_Set();
 	
 	uint32_t time = HAL_GetTick();
 
@@ -140,7 +151,28 @@ void cpp_main_init(void)
 
 void cpp_main2(void)
 {
-	
+		switch (can_choose)
+	{
+		case 0:
+			m8_joint1_.SetMotorZero();
+			m8_joint1_.CAN_Ctrl();
+			break;
+		case 1:
+			m8_joint2_.SetMotorZero(); 
+			m8_joint2_.CAN_Ctrl();
+			break;
+		case 2:
+			m8_joint3_.SetMotorZero();
+			m8_joint3_.CAN_Ctrl();
+			break;
+		case 3:
+			m8_joint4_.SetMotorZero(); 
+			m8_joint4_.CAN_Ctrl();
+			break;
+	}
+	can_choose+=1;
+	if (can_choose >= 4)
+			can_choose = 0;
 }
 
 void cpp_main(void)

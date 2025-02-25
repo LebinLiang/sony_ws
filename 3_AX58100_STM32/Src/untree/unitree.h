@@ -195,11 +195,11 @@ typedef struct {
   unsigned short mode;  // 0:空闲, 5:开环转动, 10:闭环FOC控制
   // 实际给FOC的指令力矩为：
   //  K_P*delta_Pos + K_W*delta_W + T
-  float T;    // 期望关节的输出力矩（电机本身的力矩）（Nm）
-  float W;    // 期望关节速度（电机本身的速度）(rad/s)
-  float Pos;  // 期望关节位置（rad）
-  float K_P;  // 关节刚度系数
-  float K_W;  // 关节速度系数
+  float T;    // 期望关节的输出力矩（电机本身的力矩）（Nm）tor_des
+  float W;    // 期望关节速度（电机本身的速度）(rad/s)  spd_des
+  float Pos;  // 期望关节位置（rad） pos_des
+  float K_P;  // 关节刚度系数 k_pos
+  float K_W;  // 关节速度系数 k_spd
   COMData32 Res;  // 通讯 保留字节  用于实现别的一些通讯内容
 
 } MOTOR_send;

@@ -409,11 +409,6 @@
               <FilePath>..\..\Src\untree\unitree.cpp</FilePath>
             </File>
             <File>
-              <FileName>bsp_can.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Src\bsp\bsp_can.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Src\bsp\bsp_uart.c</FilePath>
@@ -429,9 +424,14 @@
               <FilePath>..\..\Src\cpp\cpp_main.cpp</FilePath>
             </File>
             <File>
-              <FileName>bsp_dwt.c</FileName>
+              <FileName>bsp_can.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\Src\bsp\bsp_dwt.c</FilePath>
+              <FilePath>..\..\Src\bsp\bsp_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>unitree_m8010.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\..\Src\untree\unitree_m8010.cpp</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>

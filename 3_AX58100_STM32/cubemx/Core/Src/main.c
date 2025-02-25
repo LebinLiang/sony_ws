@@ -34,6 +34,7 @@
 #include "oled.h"
 #include "stdio.h"
 #include "cpp_app.h"
+#include "bsp_can.h"
 
 
 /* USER CODE END Includes */
@@ -180,6 +181,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HW_Init();
 	MainInit();
+	
+	can_filter_init(&hcan1);
+	
 	cpp_main_init();
 	
 	HAL_TIM_Base_Start_IT(&htim2);

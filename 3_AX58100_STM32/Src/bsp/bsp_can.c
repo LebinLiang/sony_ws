@@ -1,134 +1,124 @@
 /**
- *******************************************************************************
- * @file      : bsp_can.c
- * @brief     :
- * @history   :
- *  Version     Date            Author          Note
- *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
- *******************************************************************************
- * @attention :
- *******************************************************************************
- *  Copyright (c) 2023 Reborn Team, USTB.
- *  All Rights Reserved.
- *******************************************************************************
+ ***************************************(C) COPYRIGHT 2018 DJI***************************************
+ * @file       bsp_can.c
+ * @brief      this file contains sd card basic operating function
+ * @note         
+ * @Version    V1.0.0
+ * @Date       Jan-23-2018      
+ ***************************************(C) COPYRIGHT 2018 DJI***************************************
  */
-/* Includes ------------------------------------------------------------------*/
+
 #include "bsp_can.h"
-//#include "memory.h"
-#include "stdlib.h"
-/* Private macro -------------------------------------------------------------*/
-/* Private constants ---------------------------------------------------------*/
-/* Private types -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-static int idx;
-static CanInstance *pcan_instance[16] = {NULL};
-/* External variables --------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
+#include "can.h"
+#include "string.h"
+#include "stm32f4xx_hal.h"
+
+
+//extern CAN_HandleTypeDef hcan2;
+
 
 /**
- * @brief Registers a CAN instance with the specified initialization configuration.
- *
- * This function is used to register a CAN instance with the provided initialization configuration.
- *
- * @param _pconf Pointer to the CanInitConf structure containing the initialization configuration.
- * @return Pointer to the CanInstance structure representing the registered CAN instance.
- */
-CanInstance *pCanRegister(CanInitConf *_pconf)
+  * @brief  Configures the CAN, transmit and receive by polling
+  * @param  None
+  * @retval PASSED if the reception is well done, FAILED in other case
+  */
+HAL_StatusTypeDef can_filter_init(CAN_HandleTypeDef* hcan)
 {
-    if (idx >= 16) {
-        while (1) {
-        }
-    }
+  CAN_FilterTypeDef  sFilterConfig;
 
-    for (uint8_t i = 0; i < 16; i++) {
-        if (pcan_instance[i]->rx_id == _pconf->rx_id && pcan_instance[i]->hcan == _pconf->hcan) {
-            while (1) {
-            };
-        }
-    }
+  /*##-2- Configure the CAN Filter ###########################################*/
+  sFilterConfig.FilterBank = 0;
+  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  sFilterConfig.FilterIdHigh = 0x0000;
+  sFilterConfig.FilterIdLow = 0x0000;
+  sFilterConfig.FilterMaskIdHigh = 0x0000;
+  sFilterConfig.FilterMaskIdLow = 0x0000;
+  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+  sFilterConfig.FilterActivation = ENABLE;
+  sFilterConfig.SlaveStartFilterBank = 14;
+  
+	if(hcan == &hcan1)
+	{
+	sFilterConfig.FilterBank = 0;
+	}
+//	if(hcan == &hcan2)
+//	{
+//	sFilterConfig.FilterBank = 14;
+//	}
+	
+  if(HAL_CAN_ConfigFilter(hcan, &sFilterConfig) != HAL_OK)
+  {
+    /* Filter configuration Error */
+    Error_Handler();
+  }
 
-    CanInstance *p_instance = (CanInstance *)malloc(sizeof(CanInstance));
-    memset(p_instance, 0, sizeof(CanInstance));
+  /*##-3- Start the CAN peripheral ###########################################*/
+  if (HAL_CAN_Start(hcan) != HAL_OK)
+  {
+    /* Start Error */
+    Error_Handler();
+  }
+	
+  /*##-4- Activate CAN RX notification #######################################*/
+  if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+    /* Notification Error */
+    Error_Handler();
+  }
 
-    p_instance->tx_conf.StdId = _pconf->tx_id;
-    p_instance->tx_conf.IDE = CAN_ID_STD;
-    p_instance->tx_conf.RTR = CAN_RTR_DATA;
-    p_instance->tx_conf.DLC = 0x08;
-
-    p_instance->hcan = _pconf->hcan;
-    p_instance->rx_id = _pconf->rx_id;
-    p_instance->pCanCallBack = _pconf->pCanCallBack;
-
-    pcan_instance[idx++] = p_instance;
-
-    return p_instance;
+	return HAL_OK;
 }
 
-/**
- * @brief Sends a CAN message.
- *
- * This function sends a CAN message using the specified CAN instance and transmit buffer.
- *
- * @param _pinstance Pointer to the CAN instance.
- * @param _ptx_buff Pointer to the transmit buffer.
- */
-void CanSend(CanInstance *_pinstance, uint8_t *_ptx_buff)
-{
-    if (HAL_CAN_AddTxMessage(_pinstance->hcan, &_pinstance->tx_conf, _ptx_buff, (uint32_t *)CAN_TX_MAILBOX0) != HAL_OK) {
-        if (HAL_CAN_AddTxMessage(_pinstance->hcan, &_pinstance->tx_conf, _ptx_buff, (uint32_t *)CAN_TX_MAILBOX1) != HAL_OK) {
-            while (1) {
-            }
-        }
-    }
-}
 
-/**
- * @brief 设置CAN数据长度和RTR标志位
- *
- * @param _pinstance CAN实例指针
- * @param _length 数据长度
- * @param _rtr RTR标志位
- */
-void CanSetDlcAndRtr(CanInstance *_pinstance, uint8_t _length, uint8_t _rtr)
-{
-    _pinstance->tx_conf.DLC = _length;
-    _pinstance->tx_conf.RTR = _rtr;
-}
+//uint32_t can_rx_flag = 0;
 
-/**
- * @brief Callback function for CAN receive interrupt.
- *
- * This function is called when a CAN receive interrupt occurs.
- *
- * @param _phcan Pointer to the CAN handle structure.
- * @param _Fifo The FIFO number associated with the interrupt.
- */
-static void CanRxCallBack(CAN_HandleTypeDef *_phcan, uint32_t _Fifo)
-{
-    static CAN_RxHeaderTypeDef rx_header;
-    uint8_t rx_buff[8];
-    while (HAL_CAN_GetRxFifoFillLevel(_phcan, _Fifo)) {
-        HAL_CAN_GetRxMessage(_phcan, _Fifo, &rx_header, rx_buff);
-        for (uint8_t i = 0; i < 16; i++) {
-            if (rx_header.StdId == pcan_instance[i]->rx_id && _phcan == pcan_instance[i]->hcan) {
-                if (pcan_instance[i]->pCanCallBack != NULL) {
-                    pcan_instance[i]->rx_rtr = rx_header.RTR;
-                    pcan_instance[i]->rx_len = rx_header.DLC;
-                    memcpy(pcan_instance[i]->rx_buff, rx_buff, rx_header.DLC);
-                    pcan_instance[i]->pCanCallBack();
-                }
-            }
-        }
-    }
-}
+//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+//{
+//	CAN_RxHeaderTypeDef   RxHeader;
+//	
+//  if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+//  {
+//    /* Reception Error */
+//    Error_Handler();
+//  }
+//	
+//	if (RxHeader.StdId != UWB_CAN_RX_ID)
+//	{
+//		uint8_t index = 0;
+//		static uint8_t *p = (uint8_t *)&uwb_rx_data_buf;
+//		uint8_t unpackstep = 0;
+//		
+//		if (RxHeader.DLC == 8)
+//		{
+//			for (index = 0; index < 8; index++)
+//			{
+//				*p++ = RxData[index];
+//			}
+//			unpackstep++;
+//		}
+//		else if(RxHeader.DLC == 6)
+//		{
+//			for (index = 0; index <6; index++)
+//			{
+//				*p++ = RxData[index];
+//			}
 
-/**
- * @brief Callback function called when a message is pending in Rx FIFO 0.
- *
- * @param hcan Pointer to a CAN_HandleTypeDef structure that contains
- *              the configuration information for the specified CAN.
- */
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-    CanRxCallBack(hcan, CAN_RX_FIFO0);
-}
+//			p = (uint8_t *)&uwb_rx_data_buf;
+
+//			memcpy(&uwb_data, &uwb_rx_data_buf, sizeof(uwb_info_t));
+//			can_rx_flag ++;
+//		}
+//		else
+//		{
+//		//it maybe be some error occur
+//		}
+//	}
+//	
+//}
+
+
+
+
+
+

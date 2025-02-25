@@ -299,6 +299,7 @@ class Unitree_M8010 {
   void SetMotorT(float _T);
 	
 	void SetMotorZero();
+	void SetMotorSpeed(float _speed);
  
   int Update(uint8_t* pData,uint32_t CRC_data);
   float GetAngle();

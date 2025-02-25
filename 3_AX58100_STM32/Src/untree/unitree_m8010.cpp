@@ -94,6 +94,12 @@ void Unitree_M8010::SetMotorZero() {
   SetMotorData(0, 0, 0, 0, 0);
 }
 
+void Unitree_M8010::SetMotorSpeed(float _speed)
+{
+	SetMotorData(0, 0, _speed, 0, 0.02f);
+}
+
+
 /**
  * @brief Sends data from the Unitree_M8010 class.
  *
@@ -121,8 +127,8 @@ int Unitree_M8010::SendData() {
   motor_send_m8010_.ComData.Mdata.Pos = motor_send_m8010_.Pos /6.2832f*32768;
   motor_send_m8010_.ComData.Mdata.T = motor_send_m8010_.T * 256;
   motor_send_m8010_.ComData.Mdata.W = motor_send_m8010_.W /6.2832f*256;
-  motor_send_m8010_.ComData.Mdata.K_P = motor_send_m8010_.K_P /25.6f*32768;
-  motor_send_m8010_.ComData.Mdata.K_W = motor_send_m8010_.K_W /25.6f*32768;
+  motor_send_m8010_.ComData.Mdata.K_P = motor_send_m8010_.K_P *1280.0f;//25.6f*32768;
+  motor_send_m8010_.ComData.Mdata.K_W = motor_send_m8010_.K_W *1280.0f;///25.6f*32768;
   motor_send_m8010_.ComData.CRC32 =
    		HAL_CRC_Calculate(&hcrc, (uint32_t*)&motor_send_m8010_.ComData, 15);
 
@@ -235,6 +241,9 @@ void Unitree_M8010::error_data_update(uint8_t data_error)
 void Unitree_M8010::CAN_Update(uint8_t* rx_data,uint32_t ext_id)
 {
 			motor_recv_m8010_.Temp = ext_id & 0xFF;
+	
+		motor_recv_m8010_.resv_time = HAL_GetTick();
+		DetectHook(motor_recv_m8010_.resv_time);
 			
 				// 解析实际力矩、速度和位置
     uint16_t temp_torque = (rx_data[6] | (rx_data[7] << 8));
@@ -250,6 +259,7 @@ void Unitree_M8010::CAN_Update(uint8_t* rx_data,uint32_t ext_id)
 void Unitree_M8010::CAN_Set(){
 	uint32_t ext_id_ = ConstructExtendedID(moduleId_, id_, mode_, 11); //控制模式11 - 设置KposKspd
 	uint32_t   TxMailbox;
+	
 	SendData();
 	
 	// 设置CAN消息属性
@@ -281,6 +291,8 @@ void Unitree_M8010::CAN_Ctrl(){
 	uint32_t ext_id_ = ConstructExtendedID(moduleId_, id_, mode_, 10); //控制模式10 - 目标状态
 	
 	uint32_t   TxMailbox;
+	
+	SendData();
 	
 	// 设置CAN消息属性
     can_tx_message.StdId = 0; // 标准ID不使用
@@ -440,15 +452,19 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 		{
 			case 0:
 				m8_joint1_.CAN_Update(rx_data,rx_header.ExtId);
+				m8_joint1_.error_data_update(0);
 				break;
 			case 1:
 				m8_joint2_.CAN_Update(rx_data,rx_header.ExtId);
+				m8_joint2_.error_data_update(0);
 				break;
 			case 2:
 				m8_joint3_.CAN_Update(rx_data,rx_header.ExtId);
+				m8_joint3_.error_data_update(0);
 				break;
 			case 3:
 				m8_joint4_.CAN_Update(rx_data,rx_header.ExtId);
+				m8_joint4_.error_data_update(0);
 				break;
 			
 		}

@@ -88,11 +88,8 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 void OLED_ShowStatus()
 {
-    // 显示标题
-    OLED_ShowString(0, 0, "SONY-EtherCAT", 16);  // 第一行显示标题
-
-    // 显示设备状态
-    for (int i = 0; i < ERROR_LIST_LENGHT; i++) 
+    // 显示 D1 D2 D3 D4 对应 M8 的状态
+    for (int i = 6; i < 10; i++)  // M8 对应 CheckList 中的 M8_MOTOR1_TOE, M8_MOTOR2_TOE, M8_MOTOR3_TOE, M8_MOTOR4_TOE
     {
         uint8_t status_char = '1';  // 默认正常状态，显示'1'（正常）
 
@@ -112,9 +109,41 @@ void OLED_ShowStatus()
             status_char = '0';  // 仅丢失，显示'0'（丢失）
         }
 
-        // 计算显示位置
+        // 计算显示位置（D1 D2 D3 D4 显示在第二行）
+        int row = 0;  // 频率显示的上方，即第二行
+        int col = (i - 6) * 30;  // D1 D2 D3 D4 显示间隔为36像素
+
+        // 显示 D1, D2, D3, D4 和状态
+        OLED_ShowChar(col, row, 'D', 12, 1);  // 显示'D'
+        OLED_ShowChar(col + 8, row, '1' + (i - 6), 12, 1);  // 显示 D1, D2, D3, D4
+        OLED_ShowChar(col + 16, row, ':', 12, 1);  // 显示冒号
+        OLED_ShowChar(col + 24, row, status_char, 12, 1);  // 显示状态 '0', '1' 或 '2'
+    }
+
+    // 显示设备状态 (原来的设备状态从第三行开始)
+    for (int i = 0; i < 6; i++)  // 前6个设备
+    {
+        uint8_t status_char = '1';  // 默认正常状态，显示'1'（正常）
+
+        if (error_list[i].error_exist)
+        {
+            if (error_list[i].is_lost)
+            {
+                status_char = '0';  // 错误且丢失，显示'0'（丢失）
+            }
+            else
+            {
+                status_char = '0';  // 仅错误，显示'2'（错误）
+            }
+        }
+        else if (error_list[i].is_lost)
+        {
+            status_char = '0';  // 仅丢失，显示'0'（丢失）
+        }
+
+        // 计算显示位置（M1, M2, M3, M4, M5, M6 从第三行开始显示）
         int row = 16 + (i / 3) * 16;  // 每行显示三个设备
-        int col = (i % 3) * 36;  // 每个设备占24个像素位置
+        int col = (i % 3) * 36;  // 每个设备占36个像素位置，调整列间距
 
         // 显示 M1, M2, M3, ... 和状态
         OLED_ShowChar(col, row, 'M', 12, 1);  // 显示'M'
@@ -123,10 +152,10 @@ void OLED_ShowStatus()
         OLED_ShowChar(col + 24, row, status_char, 12, 1);  // 显示状态 '0', '1' 或 '2'
     }
 		
-		// 显示控制频率
+    // 显示控制频率
     char freq_str[16];
     snprintf(freq_str, sizeof(freq_str), "Freq: %.2f Hz", hz_detect);  // 格式化频率字符串
-    OLED_ShowString(0, 45, freq_str, 12);  // 在最后一行显示控制频率
+    OLED_ShowString(0, 48, freq_str, 12);  // 在最后一行显示控制频率，向上平移
 
     // 刷新OLED显示
     OLED_Refresh_Gram();
